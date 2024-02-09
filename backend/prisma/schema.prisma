@@ -21,3 +21,9 @@ model Task{
     comments Json[] 
 }
 
+model User {
+  email String @id @unique
+  password String
+  firstName String
+  lastName String
+}
