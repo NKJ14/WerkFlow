@@ -10,20 +10,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Task{
-    id Int @id @default(autoincrement())
-    title String
-    description String?
-    category String
-    priority String
-    status String
-    dueDate DateTime
-    comments Json[] 
+model Task {
+  id        Int       @id @default(autoincrement())
+  title     String
+  description String?
+  category  String
+  priority  String
+  status    String
+  dueDate   DateTime
+  comments  Json[]
+  userEmail String    // Foreign key referencing User 
+  user      User      @relation(fields: [userEmail], references: [email])
 }
 
 model User {
-  email String @id @unique
-  password String
+  email     String    @id @unique
+  password  String
   firstName String
-  lastName String
+  lastName  String
+  tasks     Task[]    //wrapping tasks with Users
 }

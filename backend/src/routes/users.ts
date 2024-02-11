@@ -46,7 +46,7 @@ router.post("/signup", async (req, res) => {
     const userId = user.email;
     //sign and return a jwt token
     const token = jwt.sign({
-        userId
+        email: userId
     }, JWT_SECRET);
 
     res.json({
@@ -90,5 +90,40 @@ router.post("/signin", async (req, res) => {
     res.status(411).json({
         message: "Error while logging in"
     })
+});
+
+//forgot password route
+const updateBody = zod.object({
+	password: zod.string().optional(),
+    firstName: zod.string().optional(),
+    lastName: zod.string().optional(),
 })
+
+router.put("/", authMiddleware, async (req, res) => {
+    const { success } = updateBody.safeParse(req.body);
+
+    if (!success) {
+        return res.status(411).json({
+            message: "Error while updating information"
+        });
+    }
+
+    const token = req.headers.token;
+    const decoded = jwt.decode((token as string).substring(7));
+
+    const updateUser = await prisma.user.update({
+        where: {
+            email: (decoded as string),
+        },
+        data: {
+            password: req.body.password ?? undefined,
+            firstName: req.body.firstName ?? undefined,
+            lastName: req.body.lastName ?? undefined,
+        },
+    });
+
+    res.json({
+        message: "Updated successfully"
+    });
+});
 export default router;
