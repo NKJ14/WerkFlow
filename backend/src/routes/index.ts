@@ -1,7 +1,6 @@
 import express from "express";
 import userRouter from "./users";
 import taskRouter from "./tasks";
-import Task from "../assets/tasks";
 const router = express.Router();
 
 router.use('/user',userRouter);

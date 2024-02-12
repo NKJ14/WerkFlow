@@ -49,9 +49,24 @@ router.get('/:id',authMiddleware,async (req,res)=>{
       })
 });
 
+const createBody = zod.object({
+  title: zod.string(),
+  description: zod.string().optional(),
+  category: zod.string(),
+  priority: zod.string(),
+  status: zod.string(),
+  dueDate: zod.date(),
+})
+
 router.post('/', authMiddleware, async (req, res) => {
   try {
     // Fire a request to add a task and post it in the db
+    const { success } = createBody.safeParse(req.body);
+    if (!success) {
+      return res.status(411).json({
+          message: "Error while creating information"
+      });
+    };
     const token = req.headers.token;
     const decoded = jwt.decode((token as string).substring(7)) as { email?: string };
     const mail = decoded?.email;
