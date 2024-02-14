@@ -3,13 +3,14 @@ import authMiddleware from "../authMiddleware";
 import { Prisma, PrismaClient } from "@prisma/client";
 const router = express.Router();
 import jwt from "jsonwebtoken";
-import zod from "zod";
+import {z} from "zod";
 const prisma = new PrismaClient();
+router.use(express.json());
 router.get('/',authMiddleware,async (req,res)=>{
     //look up db and get tasks. All prisma stuff
     //I expect token. I return tasks.
-    const token = req.headers.token;
-    const decoded = jwt.decode((token as string).substring(7)) as { email?: string };
+    const token = req.headers.authorization;
+    const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
     const mail = decoded?.email;
     const userWithTasks = await prisma.user.findUnique({
         where: {
@@ -26,8 +27,8 @@ router.get('/',authMiddleware,async (req,res)=>{
 });
 router.get('/:id',authMiddleware,async (req,res)=>{
     //look up db and get tasks by id
-    const token = req.headers.token;
-    const decoded = jwt.decode((token as string).substring(7)) as { email?: string };
+    const token = req.headers.authorization;
+    const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
     const mail = decoded?.email;
     const id = Number.parseInt(req.params.id); 
     const taskById = await prisma.user.findUnique({
@@ -49,34 +50,33 @@ router.get('/:id',authMiddleware,async (req,res)=>{
       })
 });
 
-const createBody = zod.object({
-  title: zod.string(),
-  description: zod.string().optional(),
-  category: zod.string(),
-  priority: zod.string(),
-  status: zod.string(),
-  dueDate: zod.date(),
+const createBody = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  category: z.string(),
+  priority: z.string(),
+  status: z.string()
 })
 
 router.post('/', authMiddleware, async (req, res) => {
   try {
     // Fire a request to add a task and post it in the db
+    console.log(req.body);
     const { success } = createBody.safeParse(req.body);
     if (!success) {
       return res.status(411).json({
           message: "Error while creating information"
       });
     };
-    const token = req.headers.token;
-    const decoded = jwt.decode((token as string).substring(7)) as { email?: string };
+    const token = req.headers.authorization;
+    const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
     const mail = decoded?.email;
-
     if (!mail) {
       return res.status(400).json({ 
         msg: 'Invalid or missing email in the token' 
       });
     }
-
+    const dateToday = new Date();
     const task = await prisma.task.create({
       data: {
         title: req.body.title,
@@ -84,7 +84,7 @@ router.post('/', authMiddleware, async (req, res) => {
         category: req.body.category,
         priority: req.body.priority,
         status: req.body.status,
-        dueDate: req.body.dueDate,
+        dueDate: dateToday,
         comments: req.body.comments,
         userEmail: mail,
       },
@@ -96,13 +96,12 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 })
-const updateBody = zod.object({
-  title: zod.string().optional(),
-  description: zod.string().optional(),
-  category: zod.string().optional(),
-  priority: zod.string().optional(),
-  status: zod.string().optional(),
-  dueDate: zod.date().optional(),
+const updateBody = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  priority: z.string().optional(),
+  status: z.string().optional(),
 })
 router.put('/:id',authMiddleware,async (req,res)=>{
     //edit the task
@@ -112,9 +111,9 @@ router.put('/:id',authMiddleware,async (req,res)=>{
           message: "Error while updating information"
       });
   };
-    const token = req.headers.token;
-    const decoded = jwt.decode((token as string).substring(7)) as { email?: string };
-    const mail = decoded?.email;
+  const token = req.headers.authorization;
+  const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
+  const mail = decoded?.email;
     const id = Number.parseInt(req.params.id);
     const updatedTask = await prisma.task.update({
       where: {

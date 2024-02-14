@@ -1,25 +1,27 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import  JWT_SECRET from "../config";
-import zod from "zod";
+import {z} from "zod";
 import { PrismaClient } from "@prisma/client";
 import authMiddleware from "../authMiddleware";
 const prisma =new PrismaClient();
 //here
 // backend/src/routes/user.ts
 const router = express.Router();
-
-const signupBody = zod.object({
-    email: zod.string().email(),
-	firstName: zod.string(),
-	lastName: zod.string(),
-	password: zod.string()
+router.use(express.json());
+const signupBody = z.object({
+    email: z.string().email(),
+	firstName: z.string(),
+	lastName: z.string(),
+	password: z.string()
 });
 
 router.post("/signup", async (req, res) => {
-    const { success } = signupBody.safeParse(req.body);
+    console.log(req.body);
+    const  {success} = signupBody.safeParse(req.body);
     //check if inputs are correct
     if (!success) {
+        console.log(success);
         return res.status(411).json({
             message: "Email already taken / Incorrect inputs"
         })
@@ -42,22 +44,17 @@ router.post("/signup", async (req, res) => {
             firstName: req.body.firstName,
             lastName: req.body.lastName,
         }
-    })
-    const userId = user.email;
-    //sign and return a jwt token
-    const token = jwt.sign({
-        email: userId
-    }, JWT_SECRET);
+    });
 
     res.json({
-        message: "User created successfully",
-        token: token
+        message: "User created successfully"
     })
+
 })
 
-const signinBody = zod.object({
-    email: zod.string().email(),
-	password: zod.string()
+const signinBody = z.object({
+    email: z.string().email(),
+	password: z.string()
 })
 
 router.post("/signin", async (req, res) => {
@@ -77,7 +74,7 @@ router.post("/signin", async (req, res) => {
 
     if (user) {
         const token = jwt.sign({
-            userId: user.email
+            email: user.email
         }, JWT_SECRET);
   
         res.json({
@@ -93,10 +90,10 @@ router.post("/signin", async (req, res) => {
 });
 
 //forgot password route
-const updateBody = zod.object({
-	password: zod.string().optional(),
-    firstName: zod.string().optional(),
-    lastName: zod.string().optional(),
+const updateBody = z.object({
+	password: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
 })
 
 router.put("/", authMiddleware, async (req, res) => {

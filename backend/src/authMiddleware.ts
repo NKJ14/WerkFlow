@@ -1,31 +1,27 @@
-import  JWT_SECRET from "./config";
+import JWT_SECRET from "./config";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from 'express';
 
-interface JwtPayload{
-    userId:string;
-}   //type of decoded stuff
-interface authedRequest extends Request{
-    userId: string;
-} // our request has userId attached inside so we make interface that extends normal (boilerplate) request
-  
-const authMiddleware = (req:Request, res:Response, next:NextFunction) => {
-    const authHeader = req.headers.authorization;
-    
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+
+    const authHeader = req.headers.authorization ;
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(403).json({});
+        return res.status(403).json({ message: "Authorization header missing or invalid." });
     }
-
-    const token = authHeader.split(' ')[1];
-
+    // console.log(authHeader);
+    // const decoded = jwt.verify(removeBearer(authHeader), JWT_SECRET);
+    // req.mail = decoded.email;
+    // return res.status(500).json({
+    //     msg:"Balls"
+    // })
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-        (req as authedRequest).userId = decoded.userId; // Type assertion here
+        const decoded = jwt.verify(authHeader.slice(7),JWT_SECRET) as {email?:string};
         next();
+
     } catch (err) {
-        return res.status(403).json({
-            message:"errored out. Invalid stuff."
-        });
+        console.log("Authentication error:", err);
+        return res.status(403).json({ message: "Error occurred. Invalid token." });
     }
 };
 
