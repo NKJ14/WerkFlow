@@ -126,28 +126,50 @@ router.put('/:id',authMiddleware,async (req,res)=>{
         category: req.body.category,
         priority: req.body.priority,
         status: req.body.status,
-        dueDate: req.body.dueDate,
+        dueDate: new Date(),
       },
     });
     
     res.json({
       msg:"Success!",
-      task:id
+      task:id,
+      updatedTask
     })
 });
 
 router.delete('/:id',authMiddleware,async (req,res)=>{
-    const taskId = parseInt(req.params.id);
+  const token = req.headers.authorization;
+  const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
+  const mail = decoded?.email;
+    const id = parseInt(req.params.id);
     //delete the task
-    const existingTask = await prisma.task.findUnique({
-      where: { id: taskId },
+    const existingTask = await prisma.user.findUnique({
+      where: {
+        email: mail,
+      },
+      include: {
+        tasks: {
+          where: {
+            id: id,
+          },
+        },
+      },
     });
 
     if (!existingTask) {
       return res.status(404).json({ error: 'Task not found' });
     }
-    await prisma.task.delete({
-      where: { id: taskId },
+    await prisma.user.delete({
+      where: {
+        email: mail,
+      },
+      include: {
+        tasks: {
+          where: {
+            id: id,
+          },
+        },
+      },
     });
 
     res.status(200).json({
