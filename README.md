@@ -10,4 +10,6 @@ As a user you securely signup/signin and make task management is a Kanban Style 
 - Typescript 
 - Nodejs 
 - ExpressJS
+- Tailwind CSS
+- React
 
