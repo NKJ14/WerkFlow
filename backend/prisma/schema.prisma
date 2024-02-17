@@ -1,6 +1,5 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,9 +13,9 @@ model Task {
   id        Int       @id @default(autoincrement())
   title     String
   description String?
-  category  String
-  priority  String
-  status    String
+  category  Category
+  priority  Priority
+  status    Status
   dueDate   DateTime
   comments  Json[]
   userEmail String    // Foreign key referencing User 
@@ -29,4 +28,22 @@ model User {
   firstName String
   lastName  String
   tasks     Task[]    //wrapping tasks with Users
+}
+
+enum Category{
+  Werk
+  Personal
+  Family
+}
+
+enum Priority{
+    Low
+    Medium
+    High
+    Urgent
+}
+
+enum Status{
+  Inprogress
+  Done
 }

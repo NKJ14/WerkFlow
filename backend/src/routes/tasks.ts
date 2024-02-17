@@ -1,10 +1,12 @@
 import express from "express";
 import authMiddleware from "../authMiddleware";
-import { Prisma, PrismaClient } from "@prisma/client";
-const router = express.Router();
+import { Prisma, PrismaClient,Category,Priority,Status } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import {z} from "zod";
+import cors from "cors";
+const router = express.Router();
 const prisma = new PrismaClient();
+router.use(cors());
 router.use(express.json());
 router.get('/',authMiddleware,async (req,res)=>{
     //look up db and get tasks. All prisma stuff
@@ -77,13 +79,16 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
     const dateToday = new Date();
+    const category :Category= req.body.category;
+    const priority :Priority= req.body.priority;
+    const status :Status= req.body.status;
     const task = await prisma.task.create({
       data: {
         title: req.body.title,
         description: req.body.description,
-        category: req.body.category,
-        priority: req.body.priority,
-        status: req.body.status,
+        category,
+        priority,
+        status,
         dueDate: dateToday,
         comments: req.body.comments,
         userEmail: mail,
@@ -115,6 +120,9 @@ router.put('/:id',authMiddleware,async (req,res)=>{
   const decoded = jwt.decode((token as string).slice(7)) as { email?: string };
   const mail = decoded?.email;
     const id = Number.parseInt(req.params.id);
+    const category :Category= req.body.category;
+    const priority :Priority= req.body.priority;
+    const status :Status= req.body.status;
     const updatedTask = await prisma.task.update({
       where: {
         id: id,
@@ -123,9 +131,9 @@ router.put('/:id',authMiddleware,async (req,res)=>{
       data: {
         title: req.body.title,
         description: req.body.description,
-        category: req.body.category,
-        priority: req.body.priority,
-        status: req.body.status,
+        category,
+        priority,
+        status,
         dueDate: new Date(),
       },
     });
