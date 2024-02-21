@@ -4,11 +4,13 @@ import  JWT_SECRET from "../config";
 import {z} from "zod";
 import { PrismaClient } from "@prisma/client";
 import authMiddleware from "../authMiddleware";
+import cors from "cors";
 const prisma =new PrismaClient();
 //here
 // backend/src/routes/user.ts
 const router = express.Router();
 router.use(express.json());
+router.use(cors());
 const signupBody = z.object({
     email: z.string().email(),
 	firstName: z.string(),
